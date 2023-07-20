@@ -1,4 +1,4 @@
-package core
+package main
 
 import (
 	"bufio"
@@ -13,7 +13,7 @@ import (
 
 var backupDir, dirPath string
 
-func IsDangerousFile(filename string) bool {
+func isDangerousFile(filename string) bool {
 	fmt.Println("开始检测是否是危险文件")
 	var isDangerous bool
 	i := 0
@@ -85,7 +85,7 @@ func backupAndDeleteFile(filePath string) {
 	fmt.Println("已备份文件到:", backupPath)
 }
 
-func MonitorFileChanges(dirPath string) {
+func monitorFileChanges(dirPath string) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Fatal(err)
@@ -119,13 +119,13 @@ func MonitorFileChanges(dirPath string) {
 				switch {
 				case event.Op&fsnotify.Create == fsnotify.Create:
 					fmt.Println("文件的路径是", event.Name)
-					if IsDangerousFile(event.Name) {
+					if isDangerousFile(event.Name) {
 						backupAndDeleteFile(event.Name)
 					} else {
 						fmt.Println("新建文件或文件夹:", event.Name)
 					}
 				case event.Op&fsnotify.Write == fsnotify.Write:
-					if IsDangerousFile(event.Name) {
+					if isDangerousFile(event.Name) {
 						backupAndDeleteFile(event.Name)
 					} else {
 						fmt.Println("修改文件:", event.Name)
@@ -133,7 +133,7 @@ func MonitorFileChanges(dirPath string) {
 				case event.Op&fsnotify.Remove == fsnotify.Remove:
 					fmt.Println("删除文件或文件夹:", event.Name)
 				case event.Op&fsnotify.Rename == fsnotify.Rename:
-					if IsDangerousFile(event.Name) {
+					if isDangerousFile(event.Name) {
 						backupAndDeleteFile(event.Name)
 					} else {
 						fmt.Println("重命名文件或文件夹:", event.Name)
@@ -149,5 +149,13 @@ func MonitorFileChanges(dirPath string) {
 	}()
 
 	<-make(chan struct{})
+}
+
+func Monitor() {
+	fmt.Println("请输入监控文件的路径：")
+	fmt.Scan(&dirPath)
+	fmt.Println("请输入备份文件的路径：")
+	fmt.Scan(&backupDir)
+	monitorFileChanges(dirPath)
 }
 
