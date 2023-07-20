@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func scanFile() {
+func ScanFile() {
 	var filename string
 	i := 0
 	// 读取关键字文件，里面可以是危险函数如system()等
