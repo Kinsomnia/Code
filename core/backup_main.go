@@ -10,8 +10,7 @@ import (
 	"time"
 )
 
-func BackupMain() {
-	var path string
+func BackupMain(path string) {
 	// 获取当前时间
 	now := time.Now().Format("2006-01-02")
 
@@ -32,8 +31,6 @@ func BackupMain() {
 	defer tarWriter.Close()
 
 	// 遍历目录并添加到备份文件中
-	fmt.Println("Please input the source file:")
-	fmt.Scanln(&path) // 要备份的目录
 	err = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
