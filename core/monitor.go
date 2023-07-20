@@ -85,7 +85,7 @@ func backupAndDeleteFile(filePath string) {
 	fmt.Println("已备份文件到:", backupPath)
 }
 
-func monitorFileChanges(dirPath string) {
+func MonitorFileChanges(dirPath string) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Fatal(err)
