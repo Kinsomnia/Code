@@ -11,8 +11,6 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-var backupDir, dirPath string
-
 func isDangerousFile(filename string) bool {
 	fmt.Println("开始检测是否是危险文件")
 	var isDangerous bool
@@ -72,7 +70,7 @@ func containsKeyword(s string, keyword string) bool {
 	return len(s) >= len(keyword) && s[:len(keyword)] == keyword
 }
 
-func backupAndDeleteFile(filePath string) {
+func backupAndDeleteFile(filePath string, backupDir string) {
 	backupPath := filepath.Join(backupDir, filepath.Base(filePath))
 
 	err := os.Rename(filePath, backupPath)
@@ -85,7 +83,7 @@ func backupAndDeleteFile(filePath string) {
 	fmt.Println("已备份文件到:", backupPath)
 }
 
-func monitorFileChanges(dirPath string) {
+func MonitorFileChanges(dirPath string, backupDir string) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Fatal(err)
@@ -120,13 +118,13 @@ func monitorFileChanges(dirPath string) {
 				case event.Op&fsnotify.Create == fsnotify.Create:
 					fmt.Println("文件的路径是", event.Name)
 					if isDangerousFile(event.Name) {
-						backupAndDeleteFile(event.Name)
+						backupAndDeleteFile(event.Name, backupDir)
 					} else {
 						fmt.Println("新建文件或文件夹:", event.Name)
 					}
 				case event.Op&fsnotify.Write == fsnotify.Write:
 					if isDangerousFile(event.Name) {
-						backupAndDeleteFile(event.Name)
+						backupAndDeleteFile(event.Name, backupDir)
 					} else {
 						fmt.Println("修改文件:", event.Name)
 					}
@@ -134,7 +132,7 @@ func monitorFileChanges(dirPath string) {
 					fmt.Println("删除文件或文件夹:", event.Name)
 				case event.Op&fsnotify.Rename == fsnotify.Rename:
 					if isDangerousFile(event.Name) {
-						backupAndDeleteFile(event.Name)
+						backupAndDeleteFile(event.Name, backupDir)
 					} else {
 						fmt.Println("重命名文件或文件夹:", event.Name)
 					}
@@ -150,12 +148,3 @@ func monitorFileChanges(dirPath string) {
 
 	<-make(chan struct{})
 }
-
-func Monitor() {
-	fmt.Println("请输入监控文件的路径：")
-	fmt.Scan(&dirPath)
-	fmt.Println("请输入备份文件的路径：")
-	fmt.Scan(&backupDir)
-	monitorFileChanges(dirPath)
-}
-
