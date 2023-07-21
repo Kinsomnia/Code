@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func scanFile(filename string) {
+func ScanFile(filename string) {
 	i := 0
 	// 读取关键字文件，里面可以是危险函数如system()等
 	keywordsFile, err := os.Open("keywords.txt")
