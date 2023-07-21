@@ -7,8 +7,7 @@ import (
 	"strings"
 )
 
-func ScanFile() {
-	var filename string
+func scanFile(filename string) {
 	i := 0
 	// 读取关键字文件，里面可以是危险函数如system()等
 	keywordsFile, err := os.Open("keywords.txt")
@@ -27,8 +26,6 @@ func ScanFile() {
 	}
 
 	// 读取目标文件内容
-	fmt.Println("Please input the target file:")
-	fmt.Scanln(&filename)
 	targetFile, err := os.Open(filename)
 	if err != nil {
 		fmt.Println(err)
