@@ -41,7 +41,6 @@ func DataCatch(targeturl string) {
 			"dict":   {},
 		},
 	}
-
 	// 目标服务器地址
 	fmt.Println("目标服务器地址是：", targeturl)
 	targetURL, err := url.Parse(targeturl)
@@ -111,9 +110,9 @@ func (t *myTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	} else {
 		//fmt.Println(string(dump))
 		queryParams := req.URL.Query()
-		for _, values := range queryParams {
+		for key, values := range queryParams {
 			// fmt.Printf("Key: %s\n", key)
-			for key, value := range values {
+			for _, value := range values {
 				// fmt.Printf("Value: %s\n", value)
 				// 对参数进行检查和过滤，防止 SQL 注入
 				if t.isSQLInjection(value) {
@@ -136,11 +135,13 @@ func (t *myTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 					// 这里可以进行自定义的处理逻辑
 					return nil, fmt.Errorf("< phar unserialize >detected:")
 				}
-				if strings.EqualFold(string(key), "url") {
+				fmt.Println("要检测的key是", key)
+				if strings.EqualFold(key, "url") {
+					fmt.Println("检测到key是url")
 					if t.isURLBlacklisted(value) {
 						// 处理不安全的协议请求
-						log.Println("Unsafe protocol detected:", value)
-						t.writeAttackLog("Catch attack: < UnsafeProtocol > ", headers, requestData)
+						log.Println("Unsafe protocol detected:", key, "=", value)
+						t.writeAttackLog("Catch attack: < SSRF > ", headers, requestData)
 						return nil, fmt.Errorf("Unsafe protocol detected")
 					}
 					if IsSafeURL(value) {
@@ -150,11 +151,6 @@ func (t *myTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 					}
 				}
 			}
-		}
-		// 将请求包保存到文件中
-		err = ioutil.WriteFile("request.txt", dump, 0644)
-		if err != nil {
-			log.Println(err)
 		}
 	}
 
@@ -239,7 +235,7 @@ func contains(slice []int, element int) bool {
 
 // 编写攻击日志
 func (t *myTransport) writeAttackLog(alert string, headers http.Header, requestData string) {
-	MaxLogSize := 1024
+	MaxLogSize := 102400
 	tmp := fmt.Sprintf("%x", sha1.Sum([]byte("Syclover"))) + t.timestamp + fmt.Sprintf("%x", sha1.Sum([]byte("Syclover")))
 	tmp += "[" + time.Now().Format("15:04:05") + "] {" + alert + "}\n"
 	tmp += "SRC IP: " + headers.Get("X-Real-IP") + "\n"
@@ -253,7 +249,7 @@ func (t *myTransport) writeAttackLog(alert string, headers http.Header, requestD
 	if requestData != "" {
 		tmp += "\n" + requestData + "\n"
 	}
-	err := ioutil.WriteFile("under_attack_log.txt", []byte(tmp), os.ModeAppend)
+	err := ioutil.WriteFile("under_attack_log.txt", []byte(tmp), 0644)
 	if err != nil {
 		log.Println(err)
 	}
@@ -393,4 +389,3 @@ func readIPAddressesFromFile(filename string, targetIP string) (bool, error) {
 
 	return false, nil
 }
-
